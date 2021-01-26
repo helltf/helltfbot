@@ -145,25 +145,25 @@ async function refreshData(){
             console.log(currentData);
             console.log(OLDDATA);
             if(currentData.gameid!=OLDDATA.gameid){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
                 OLDDATA=currentData;
             }
             else if(currentData.is_live!=OLDDATA.is_live){
                 if(currentData){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
                 OLDDATA=currentData;
                 }
                 else{
-                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
-                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
+                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
+                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
                     OLDDATA=currentData;
                 }
             }
             else if(currentData.title!=OLDDATA.title){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name +' changed his title to ' + currentData.title);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name +' changed his title to ' + currentData.title);
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name +' changed his title to ' + currentData.title);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name +' changed his title to ' + currentData.title);
                 OLDDATA=currentData;
             }
         }},'papaplatte');
@@ -178,13 +178,8 @@ function initAT(){
 }
 async function initData(){
     await getInitLive(process.env.GET_GAMES,AT,(res,streamer)=>{
-    },'helltf')
+    },'papaplatte')
 }  
-initAT();
-setTimeout(()=>{
-    connect();
-},2000)
-
 async function getInitLive(url,accessToken,callback,streamer){
     const iLiveOptions = {
         url:process.env.GET_LIVE + streamer,
@@ -208,4 +203,10 @@ async function getInitLive(url,accessToken,callback,streamer){
         callback(res,streamer);
     })
 };
+
+
+initAT();
+setTimeout(()=>{
+    connect();
+},2000)
 
