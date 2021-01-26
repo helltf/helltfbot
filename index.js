@@ -1,10 +1,10 @@
 require('dotenv').config();
+const { S_IFBLK } = require('constants');
 const { TIMEOUT } = require('dns');
 const request = require('request');
 const { setInterval } = require('timers');
 
 const tmi = require('tmi.js');
-
 const botoptions = {
     options:{
         debug: true
@@ -17,10 +17,10 @@ const botoptions = {
         username:'helltfbot',
         password:process.env.IRC_PASSWORD
     },
-    channels:['helltf'],
+    channels:['helltf','anniiikaa'],
 };
 const client= new tmi.Client(botoptions);
-var Olddata;
+
 client.on('connected',(address,port)=> {
 });
 client.on('chat', (channel,user,message,self)=> {
@@ -69,7 +69,7 @@ const getGames = (url,accessToken,callback,channel)=>{
         if(err){
             return console.log(err);
         }
-        console.log('Status: {res.statusCode}');
+        console.log('Status: ${res.statusCode}');
         var ob=JSON.parse(body);
         client.say(channel,ob.data[0].broadcaster_name+ "'s current streamtitle is: " + ob.data[0].title);
         callback(res);
@@ -88,11 +88,11 @@ async function getLive(url,accessToken,callback,streamer){
         if(err){
             return console.log(err);
         }
-        callback(res);
+        callback(res,streamer);
     })
 };
 
-async function initializeAT(url,callback){
+function initializeAT(url,callback){
     const options={
         url: process.env.TOKEN_URL,
         json:true,
@@ -107,7 +107,7 @@ async function initializeAT(url,callback){
             if(err){
                 return console.log(err);
             }
-            console.log('Status: ${res.statusCode');
+            console.log('Status: ${res.statusCode}');
             callback(res);
         });
     }
@@ -116,54 +116,96 @@ async function initializeAT(url,callback){
     }
 };
 async function connect(){
-    await initAT();
-    console.log('init AT');
-    client.connect();
-    setTimeout(()=>{
-        initData();
+    try{
+        console.log('init AT');
+        await client.connect();
+        console.log('client connected')
+        await initData();
         console.log('init Data');
-        console.log()
-        refreshData();
-    },1000)
+        setTimeout(()=>{
+            refreshData();
+        },1000)
+    }
+    catch(error){
+        console.log(error);
+    }
     setInterval(refreshData,5*1000);
     setInterval(initializeAT,3300000);
-
 }
 async function refreshData(){
-    getLive(process.env.GET_GAMES,AT,(response) =>{
-        var ob=JSON.parse(response.body);
-        let hit=0;
+    getLive(process.env.GET_GAMES,AT,(res,streamer) =>{
+        var ob=JSON.parse(res.body);
         if(ob!=undefined){
             for(i=0;i<ob.data.length;++i){
                 if(ob.data[i].display_name===streamer){
-                    ob.data[i]=currentData;
+                    currentData = ob.data[i];
                     break;
                 }
             }
-            if(hit===0){
-                console.log('no streamer found');
+            console.log(currentData);
+            console.log(OLDDATA);
+            if(currentData.gameid!=OLDDATA.gameid){
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
+                OLDDATA=currentData;
             }
-        }
-        else{
-            console.log(channel,'invalid input');
-        }
-        },'papaplatte');
+            else if(currentData.is_live!=OLDDATA.is_live){
+                if(currentData){
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
+                OLDDATA=currentData;
+                }
+                else{
+                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
+                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: ' + currentData.display_name + ' went live PagChomp');
+                    OLDDATA=currentData;
+                }
+            }
+            else if(currentData.title!=OLDDATA.title){
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name +' changed his title to ' + currentData.title);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake: '+ currentData.display_name +' changed his title to ' + currentData.title);
+                OLDDATA=currentData;
+            }
+        }},'papaplatte');
         console.log('data refreshed');
-
     }
-async function initAT(){
-    await initializeAT(process.env.TOKEN_URL,(res)=>{
+function initAT(){
+     initializeAT(process.env.TOKEN_URL,(res)=>{
         AT=res.body.access_token;
         console.log('initialized AT');
         return AT;
     })
 }
 async function initData(){
-    getGames(process.env.GET_GAMES,AT,(res)=>{
-        let ob = JSON.parse(res.body);
-        console.log(ob);
-        Olddata=ob;
-        return Olddata;
-    })
+    await getInitLive(process.env.GET_GAMES,AT,(res,streamer)=>{
+    },'helltf')
 }  
-connect();
+initAT();
+setTimeout(()=>{
+    connect();
+},2000)
+
+async function getInitLive(url,accessToken,callback,streamer){
+    const iLiveOptions = {
+        url:process.env.GET_LIVE + streamer,
+        method:'GET',
+        headers:{
+            'Client-ID':process.env.CLIENT_ID,
+            'Authorization': 'Bearer ' + accessToken
+        }
+    };
+    request.get(iLiveOptions,(err,res,body)=>{
+        if(err){
+            return console.log(err);
+        }
+       var ob =JSON.parse(res.body);
+       for(i=0;i<ob.data.length;++i){
+        if(ob.data[i].display_name===streamer){
+            OLDDATA = ob.data[i];
+            break;
+        }
+       }
+        callback(res,streamer);
+    })
+};
+
