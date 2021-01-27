@@ -5,6 +5,7 @@ const request = require('request');
 const { setInterval } = require('timers');
 
 const tmi = require('tmi.js');
+//set options for chatclient, where password is your OAuthtoken
 const botoptions = {
     options:{
         debug: true
@@ -19,28 +20,31 @@ const botoptions = {
     },
     channels:['helltf','anniiikaa','splatoxic'],
 };
+//create new istance of Client
 const client= new tmi.Client(botoptions);
 
+//event if Client connects
 client.on('connected',(address,port)=> {
 });
+
+//event if chat message in a connected Channel appears
 client.on('chat', (channel,user,message,self)=> {
-    // if(message==='TriHard'){
-    //     client.action(channel,'TriHard '+ user['display-name']);
-    //     client.timeout(channel,user['display-name'],1,'no TriHard s allowed')
-    // }
     if(message==='hb titlecheck'){
-        getGames(process.env.GET_GAMES,AT,(response) =>{
+        getTitle(process.env.GET_GAMES,AT,(response) =>{
             },channel)
     }
     if(message==='hb git'){
-        client.say(channel , "Here you'll find my github repository Okayge 👉 https://github.com/helltf/helltfbot");
+        client.say(channel , "Here you'll find my github repository Okayge 👉 https://github.com/helltf/helltfbot . Nevertheless it's Pepege Code  ");
     }
+    //event if message starts with hb livecheck
     if(message.substring(0,12)==='hb livecheck'){
         var streamer = message.substring(13,message.length);
+        //GET request to API -> returns JSON in response 
         getLive(process.env.GET_GAMES,AT,(response) =>{
         var ob=JSON.parse(response.body);
         let hit=0;
         if(ob!=undefined){
+            //if our JSON defined search for the right streamer in Array-> output islive ? live : offline
             for(i=0;i<ob.data.length;++i){
                 if(ob.data[i].display_name===streamer){
                     client.say(channel, ob.data[i].is_live? ob.data[i].display_name +' is currently live FeelsAmazingMan': ob.data[i].display_name + ' is currently offline FeelsBadMan');
@@ -48,20 +52,23 @@ client.on('chat', (channel,user,message,self)=> {
                     break;
                 }
             }
+            // if streamer is not in Array -> not found 
             if(hit===0){
                 client.say(channel,'no streamer found');
             }
         }
+        // query cant look up that name -> invalid input
         else{
             client.say(channel,'invalid input');
         }
         },streamer);
     }
 });
-const getGames = (url,accessToken,callback,channel)=>{
+// function to get the current title
+const getTitle = (url,accessToken,callback,channel)=>{
 
     const gameOptions = {
-        url:process.env.GET_GAMES,
+        url:process.env.GET_TITLE,
         method:'GET',
         headers:{
             'Client-ID':process.env.CLIENT_ID,
