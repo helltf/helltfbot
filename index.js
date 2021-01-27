@@ -3,7 +3,7 @@ const { S_IFBLK } = require('constants');
 const { TIMEOUT } = require('dns');
 const request = require('request');
 const { setInterval } = require('timers');
-
+var CG;
 const tmi = require('tmi.js');
 //set options for chatclient, where password is your OAuthtoken
 const botoptions = {
@@ -102,6 +102,26 @@ async function getLive(url,accessToken,callback,streamer){
     })
 };
 
+async function getGamebyID(url,accessToken,callback,gameid){
+    const GIDOptions = {
+        url:process.env.GET_GAME + gameid,
+        method:'GET',
+        headers:{
+            'Client-ID':process.env.CLIENT_ID,
+            'Authorization': 'Bearer ' + accessToken
+        }
+    };
+    request.get(GIDOptions,(err,res,body)=>{
+        if(err){
+            return console.log(err);
+        }
+        var ob = (JSON.parse(res.body));
+        CG=ob.data[0].name;
+        return CG;
+        callback(res);
+    })
+};
+
 function initializeAT(url,callback){
     const options={
         url: process.env.TOKEN_URL,
@@ -137,6 +157,7 @@ async function connect(){
     setInterval(refreshData,5*1000);
     setInterval(initAT,3300000);
 }
+
 async function refreshData(){
     getLive(process.env.GET_GAMES,AT,(res,streamer) =>{
         var ob=JSON.parse(res.body);
@@ -147,26 +168,28 @@ async function refreshData(){
                     break;
                 }
             }
-            if(currentData.gameid!=OLDDATA.gameid){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name+' changed his game to ' + currentData.gameid);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name+' changed his game to ' + currentData.gameid);
+            getGamebyID(process.env.GET_GAME,AT,(res)=>{
+            },currentData.game_id)
+            if(currentData.game_id!=OLDDATA.game_id){
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name+' changed his game to ' + CG);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name+' changed his game to ' + CG);
                 OLDDATA=currentData;
             }
             else if(currentData.is_live!=OLDDATA.is_live){
                 if(currentData){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went live PagMan');
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went live PagMan');
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went live PagMan');
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went live PagMan');
                 OLDDATA=currentData;
                 }
                 else{
-                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went offline Sadge');
-                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went offline Sadge');
+                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went offline Sadge');
+                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went offline Sadge');
                     OLDDATA=currentData;
                 }
             }
             else if(currentData.title!=OLDDATA.title){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
                 OLDDATA=currentData;
             }
         }},'papaplatte');
@@ -212,4 +235,3 @@ initAT()
 setTimeout(()=>{
     connect();
 },2000)
-
