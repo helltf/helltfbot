@@ -17,20 +17,23 @@ const botoptions = {
         username:'helltfbot',
         password:process.env.IRC_PASSWORD
     },
-    channels:['helltf','anniiikaa'],
+    channels:['helltf','anniiikaa','splatoxic'],
 };
 const client= new tmi.Client(botoptions);
 
 client.on('connected',(address,port)=> {
 });
 client.on('chat', (channel,user,message,self)=> {
-    if(message==='TriHard'){
-        //client.action(channel,'TriHard '+ user['display-name']);
-        client.timeout(channel,user['display-name'],1,'no TriHard s allowed')
-    }
+    // if(message==='TriHard'){
+    //     client.action(channel,'TriHard '+ user['display-name']);
+    //     client.timeout(channel,user['display-name'],1,'no TriHard s allowed')
+    // }
     if(message==='hb titlecheck'){
         getGames(process.env.GET_GAMES,AT,(response) =>{
             },channel)
+    }
+    if(message==='hb git'){
+        client.say(channel , "Here you'll find my github repository Okayge 👉 https://github.com/helltf/helltfbot");
     }
     if(message.substring(0,12)==='hb livecheck'){
         var streamer = message.substring(13,message.length);
@@ -102,7 +105,6 @@ function initializeAT(url,callback){
             grant_type:'client_credentials'
         }
     };
-    try{
         request.post(options,(err,res,body)=>{
             if(err){
                 return console.log(err);
@@ -110,10 +112,6 @@ function initializeAT(url,callback){
             console.log('Status: ${res.statusCode}');
             callback(res);
         });
-    }
-    catch(error){
-        console.log(error);
-    }
 };
 async function connect(){
     try{
@@ -130,7 +128,7 @@ async function connect(){
         console.log(error);
     }
     setInterval(refreshData,5*1000);
-    setInterval(initializeAT,3300000);
+    setInterval(initAT,3300000);
 }
 async function refreshData(){
     getLive(process.env.GET_GAMES,AT,(res,streamer) =>{
@@ -142,28 +140,26 @@ async function refreshData(){
                     break;
                 }
             }
-            console.log(currentData);
-            console.log(OLDDATA);
             if(currentData.gameid!=OLDDATA.gameid){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name+' changed his game to ' + currentData.gameid);
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name+' changed his game to ' + currentData.gameid);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name+' changed his game to ' + currentData.gameid);
                 OLDDATA=currentData;
             }
             else if(currentData.is_live!=OLDDATA.is_live){
                 if(currentData){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went live PagMan');
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went live PagMan');
                 OLDDATA=currentData;
                 }
                 else{
-                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
-                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: ' + currentData.display_name + ' went live PagChomp');
+                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went offline Sadge');
+                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 ' + currentData.display_name + ' went offline Sadge');
                     OLDDATA=currentData;
                 }
             }
             else if(currentData.title!=OLDDATA.title){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name +' changed his title to ' + currentData.title);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul: '+ currentData.display_name +' changed his title to ' + currentData.title);
+                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
+                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
                 OLDDATA=currentData;
             }
         }},'papaplatte');
@@ -205,7 +201,7 @@ async function getInitLive(url,accessToken,callback,streamer){
 };
 
 
-initAT();
+initAT()
 setTimeout(()=>{
     connect();
 },2000)
