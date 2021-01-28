@@ -1,9 +1,6 @@
 require('dotenv').config();
-const { S_IFBLK } = require('constants');
-const { TIMEOUT } = require('dns');
 const request = require('request');
-const { setInterval } = require('timers');
-var CG;
+
 const tmi = require('tmi.js');
 //set options for chatclient, where password is your OAuthtoken
 const botoptions = {
@@ -18,7 +15,7 @@ const botoptions = {
         username:'helltfbot',
         password:process.env.IRC_PASSWORD
     },
-    channels:['helltf','anniiikaa','splatoxic'],
+    channels:['helltf','anniiikaa'],
 };
 //create new istance of Client
 const client= new tmi.Client(botoptions);
@@ -30,11 +27,16 @@ client.on('connected',(address,port)=> {
 //event if chat message in a connected Channel appears
 client.on('chat', (channel,user,message,self)=> {
     if(message==='hb titlecheck'){
-        getTitle(process.env.GET_GAMES,AT,(response) =>{
+        getTitle(process.env.GET_GAMES,AT,(res) =>{
+            var ob=JSON.parse(res.body);
+            client.say(channel,ob.data[0].broadcaster_name+ "'s current streamtitle is: " + ob.data[0].title);
             },channel)
     }
     if(message==='hb git'){
         client.say(channel , "Here you'll find my github repository Okayge 👉 https://github.com/helltf/helltfbot . Nevertheless it's Pepege Code  ");
+    }
+    if(message==='hb ping'){
+        client.say(channel,'PONG! Programm is currently running');
     }
     //event if message starts with hb livecheck
     if(message.substring(0,12)==='hb livecheck'){
@@ -79,50 +81,12 @@ const getTitle = (url,accessToken,callback,channel)=>{
         if(err){
             return console.log(err);
         }
-        console.log('Status: ${res.statusCode}');
-        var ob=JSON.parse(body);
-        client.say(channel,ob.data[0].broadcaster_name+ "'s current streamtitle is: " + ob.data[0].title);
+        console.log('Status:' +  res.statusCode);
         callback(res);
     });
-};
-async function getLive(url,accessToken,callback,streamer){
-    const LiveOptions = {
-        url:process.env.GET_LIVE + streamer,
-        method:'GET',
-        headers:{
-            'Client-ID':process.env.CLIENT_ID,
-            'Authorization': 'Bearer ' + accessToken
-        }
-    };
-    request.get(LiveOptions,(err,res,body)=>{
-        if(err){
-            return console.log(err);
-        }
-        callback(res,streamer);
-    })
-};
 
-async function getGamebyID(url,accessToken,callback,gameid){
-    const GIDOptions = {
-        url:process.env.GET_GAME + gameid,
-        method:'GET',
-        headers:{
-            'Client-ID':process.env.CLIENT_ID,
-            'Authorization': 'Bearer ' + accessToken
-        }
-    };
-    request.get(GIDOptions,(err,res,body)=>{
-        if(err){
-            return console.log(err);
-        }
-        var ob = (JSON.parse(res.body));
-        CG=ob.data[0].name;
-        return CG;
-        callback(res);
-    })
 };
-
-function initializeAT(url,callback){
+async function initializeAT(url,callback){
     const options={
         url: process.env.TOKEN_URL,
         json:true,
@@ -140,98 +104,105 @@ function initializeAT(url,callback){
             callback(res);
         });
 };
-async function connect(){
-    try{
-        console.log('init AT');
-        await client.connect();
-        console.log('client connected')
-        await initData();
-        console.log('init Data');
-        setTimeout(()=>{
-            refreshData();
-        },1000)
-    }
-    catch(error){
-        console.log(error);
-    }
-    setInterval(refreshData,5*1000);
-    setInterval(initAT,3300000);
-}
-
 async function refreshData(){
-    getLive(process.env.GET_GAMES,AT,(res,streamer) =>{
-        var ob=JSON.parse(res.body);
-        if(ob!=undefined){
-            for(i=0;i<ob.data.length;++i){
-                if(ob.data[i].display_name===streamer){
-                    currentData = ob.data[i];
-                    break;
-                }
-            }
-            getGamebyID(process.env.GET_GAME,AT,(res)=>{
-            },currentData.game_id)
-            if(currentData.game_id!=OLDDATA.game_id){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name+' changed his game to ' + CG);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name+' changed his game to ' + CG);
-                OLDDATA=currentData;
-            }
-            else if(currentData.is_live!=OLDDATA.is_live){
-                if(currentData){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went live PagMan');
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went live PagMan');
-                OLDDATA=currentData;
-                }
-                else{
-                    client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went offline Sadge');
-                    client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 ' + currentData.display_name + ' went offline Sadge');
-                    OLDDATA=currentData;
-                }
-            }
-            else if(currentData.title!=OLDDATA.title){
-                client.say('helltf','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
-                client.say('anniiikaa','DinkDonk helltf flushedjulian anniiikaa pagshake pepegepaul einleo 👉 '+ currentData.display_name +' changed his title to ' + currentData.title);
-                OLDDATA=currentData;
-            }
-        }},'papaplatte');
-        console.log('data refreshed');
+    for (let [channelName, channelID]  of Object.entries(enabledChannels)){
+        await doChannelAPIUpdate(channelName,channelID,async (data)=>{
+            await updateChannelProperty(channelName, "title", data.title);
+            await updateChannelProperty(channelName, "game_id", data.game_id);
+            await updateChannelProperty(channelName, "is_live", data.is_live);
+        });
     }
-function initAT(){
-     initializeAT(process.env.TOKEN_URL,(res)=>{
-        AT=res.body.access_token;
-        console.log('initialized AT');
-        return AT;
-    })
+    console.log('data refreshed');
 }
-async function initData(){
-    await getInitLive(process.env.GET_GAMES,AT,(res,streamer)=>{
-    },'papaplatte')
-}  
-async function getInitLive(url,accessToken,callback,streamer){
-    const iLiveOptions = {
-        url:process.env.GET_LIVE + streamer,
+async function doChannelAPIUpdate(channelName,channelID,callback){
+    const Getoptions={
+        url:process.env.GET_LIVE + channelName,
         method:'GET',
         headers:{
             'Client-ID':process.env.CLIENT_ID,
-            'Authorization': 'Bearer ' + accessToken
+            'Authorization': 'Bearer ' + AT
         }
     };
-    request.get(iLiveOptions,(err,res,body)=>{
-        if(err){
-            return console.log(err);
+        request.get(Getoptions,(err,res,body)=>{
+            if(err)return console.log(err);
+            var job=JSON.parse(body);
+            for(i=0;i<job.data.length;++i){
+                if(job.data[i].display_name===channelName){
+                    var data=job.data[i];
+                    break;
+                }
+            }
+            callback(data);
+        });
+    }
+async function updateChannelProperty(channelName,key,value){
+    let oldValue= enabledChannels[channelName][key];
+    if(oldValue===undefined){
+        enabledChannels[channelName][key]=value;
+    }
+    if(value!=undefined&&oldValue!=undefined&&oldValue!=value){
+        await notify(key,value,channelName);
+        enabledChannels[channelName][key]=value;
+    }
+}
+async function notify(key, value,channelName){
+    switch(key){
+        case 'title':client.say('helltf', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
+        client.say('anniiikaa', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
+        break;
+        case 'is_live':  if(value){
+            client.say('helltf', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' went Live');
+            client.say('anniiikaa', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' went Live');
         }
-       var ob =JSON.parse(res.body);
-       for(i=0;i<ob.data.length;++i){
-        if(ob.data[i].display_name===streamer){
-            OLDDATA = ob.data[i];
-            break;
+        else{
+            client.say('helltf', 'DinkDonk helltf FeelsBadMan 👉 ' + channelName+ ' went offline');
+            client.say('anniiikaa', 'DinkDonk helltf FeelsBadMan 👉 ' + channelName+ ' went offline');
         }
-       }
-        callback(res,streamer);
+        break;
+        case'game_id':client.say('helltf', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
+        client.say('anniiikaa', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
+        default:client.say('helltf','wrong key helltf DinkDonk');
+    }
+}
+initializeAT(process.env.TOKEN_URL,(res)=>{
+    AT=res.body.access_token;
+    return AT;
     })
-};
-
-
-initAT()
+  
 setTimeout(()=>{
-    connect();
+    connect()
 },2000)
+
+async function connect(){
+    await client.connect()
+    refreshData()
+    setInterval(refreshData,5*1000);
+}
+let currentdata = {};
+
+let enabledChannels = {
+        papaplatte:{
+            id:50985620,
+            title:undefined,
+            is_live:undefined,
+            game_id:undefined,
+        },
+        nebelniek:{
+            id:53292169,
+            title:undefined,
+            is_live:undefined,
+            game_id:undefined,
+        },
+        helltf:{
+            id:109035947,
+            title:undefined,
+            is_live:undefined,
+            game_id:undefined,
+        },
+        schmortyy:{
+            id:210120795,
+            title:undefined,
+            is_live:undefined,
+            game_id:undefined,
+        }
+}
