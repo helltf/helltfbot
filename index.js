@@ -147,37 +147,46 @@ async function updateChannelProperty(channelName,key,value){
 }
 async function notify(key, value,channelName){
     switch(key){
-        case 'title':client.say('helltf', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
-        client.say('anniiikaa', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
+        case 'title':client.say('helltf', 'DinkDonk ' + enabledChannels[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
+        client.say('anniiikaa', 'DinkDonk ' + enabledChannels[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
         break;
         case 'is_live':  if(value){
-            client.say('helltf', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' went Live');
-            client.say('anniiikaa', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' went Live');
+            client.say('helltf', 'DinkDonk ' + enabledChannels[channelName].notified + '  PagMan 👉 ' + channelName+ ' went Live');
+            client.say('anniiikaa', 'DinkDonk ' + enabledChannels[channelName].notified + ' pagshake  PagMan 👉 ' + channelName+ ' went Live');
         }
         else{
-            client.say('helltf', 'DinkDonk helltf FeelsBadMan 👉 ' + channelName+ ' went offline');
-            client.say('anniiikaa', 'DinkDonk helltf FeelsBadMan 👉 ' + channelName+ ' went offline');
+            client.say('helltf', 'DinkDonk ' + enabledChannels[channelName].notified + '  FeelsBadMan 👉 ' + channelName+ ' went offline');
+            client.say('anniiikaa', 'DinkDonk ' + enabledChannels[channelName].notified + '  FeelsBadMan 👉 ' + channelName+ ' went offline');
         }
         break;
-        case'game_id':client.say('helltf', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
-        client.say('anniiikaa', 'DinkDonk helltf PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
+        case'game_id':client.say('helltf', 'DinkDonk ' + enabledChannels[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
+        client.say('anniiikaa', 'DinkDonk ' + enabledChannels[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
         default:client.say('helltf','wrong key helltf DinkDonk');
     }
 }
-initializeAT(process.env.TOKEN_URL,(res)=>{
-    AT=res.body.access_token;
-    return AT;
-    })
-  
+initAT();
+async function initAT(){
+    initializeAT(process.env.TOKEN_URL,(res)=>{
+        AT=res.body.access_token;
+        return AT;
+        })
+}
+
 setTimeout(()=>{
     connect()
 },2000)
 
 async function connect(){
     await client.connect()
-    refreshData()
+    try{refreshData()
+    }
+    catch(err){
+        console.log(err);
+    }
     setInterval(refreshData,5*1000);
+    setInterval(initAT,3300000)
 }
+
 let currentdata = {};
 
 let enabledChannels = {
@@ -186,23 +195,41 @@ let enabledChannels = {
             title:undefined,
             is_live:undefined,
             game_id:undefined,
+            notified:'helltf schmortyy anniiikaa einleo pepegepaul pagshake yxuns'
         },
         nebelniek:{
             id:53292169,
             title:undefined,
             is_live:undefined,
             game_id:undefined,
+            notified:'helltf'
         },
         helltf:{
             id:109035947,
             title:undefined,
             is_live:undefined,
             game_id:undefined,
+            notified:'helltf'
         },
         schmortyy:{
             id:210120795,
             title:undefined,
             is_live:undefined,
             game_id:undefined,
+            notified:'flushedjulian'
+        },
+        bastighg:{
+            id:38121996,
+            title:undefined,
+            is_live:undefined,
+            game_id:undefined,
+            notified:'helltf'
+        },
+        daannyy:{
+            id:77962388,
+            title:undefined,
+            is_live:undefined,
+            game_id:undefined,
+            notified:'helltf pepegepaul flushedjulian yxuns'
         }
 }
