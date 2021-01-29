@@ -262,16 +262,20 @@ async function updateChannelProperty(channelName,key,value){
 }
 async function notify(key, value,channelName){
     switch(key){
-        case 'title':client.say('helltf', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
+        case 'title':client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
+            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
         break;
         case 'is_live':  if(value){
-            client.say('helltf', 'DinkDonk ' + channelList[channelName].notified + '  PagMan 👉 ' + channelName+ ' went Live');
+            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  PagMan 👉 ' + channelName+ ' went Live');
+            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  PagMan 👉 ' + channelName+ ' went Live');
         }
         else{
-            client.say('helltf', 'DinkDonk ' + channelList[channelName].notified + '  FeelsBadMan 👉 ' + channelName+ ' went offline');
+            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  FeelsBadMan 👉 ' + channelName+ ' went offline');
+            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  FeelsBadMan 👉 ' + channelName+ ' went offline');
         }
         break;
-        case'game_id':client.say('helltf', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
+        case'game_id':client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
+        case'game_id':client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
         break;
         default:client.say('helltf','wrong key helltf DinkDonk');
     }
