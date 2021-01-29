@@ -40,14 +40,14 @@ client.on('chat', (channel,user,message,self)=> {
     }
     if(message==='hb ping'){
         si.cpuTemperature().then((data)=>{
-            client.say(channel,'PONG! Programm is up for ' + timer.getTimeValues().days+ ' days, ' + timer.getTimeValues().hours + ' hours, ' + timer.getTimeValues().minutes + ' min' +
+            client.say(channel,'PONG! Programm is up for ' + timer.getTimeValues().days+ ' days, ' + timer.getTimeValues().hours + ' hours, ' + timer.getTimeValues().minutes + ' min ' +
          data.main);
         }).catch((err)=>{
             console.log(err);
         })
     }
     if(message==='hb commands'){
-        clients.say(channel,'All available commands are hb [git,ping,supported,removestreamer,addstreamer,notify,removeme]');
+        client.say(channel,'All available commands are hb [git,ping,supported,removestreamer,addstreamer,notify,removeme]');
     }
     if(message==='hb supported'){
         var result="";
@@ -262,20 +262,20 @@ async function updateChannelProperty(channelName,key,value){
 }
 async function notify(key, value,channelName){
     switch(key){
-        case 'title':client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
-            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value);
+        case 'title':client.say('anniiikaa',' PagMan 👉 ' + channelName+ ' has changed his title to ' + value + ' DinkDonk ' + channelList[channelName].notified);
+            client.action('helltf',+ ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
         break;
         case 'is_live':  if(value){
-            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  PagMan 👉 ' + channelName+ ' went Live');
-            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  PagMan 👉 ' + channelName+ ' went Live');
+            client.action('anniiikaa','  PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
+            client.action('helltf','  PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
         }
         else{
-            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  FeelsBadMan 👉 ' + channelName+ ' went offline');
-            client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + '  FeelsBadMan 👉 ' + channelName+ ' went offline');
+            client.action('anniiikaa','  FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+            client.action('helltf','  FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
         }
         break;
-        case'game_id':client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
-        case'game_id':client.say('anniiikaa', 'DinkDonk ' + channelList[channelName].notified + ' PagMan 👉 ' + channelName+ ' has changed his game to ' + value);
+        case'game_id':client.action('anniiikaa',' PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
+        client.action('helltf',' PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
         break;
         default:client.say('helltf','wrong key helltf DinkDonk');
     }
