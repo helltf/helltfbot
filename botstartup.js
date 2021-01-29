@@ -2,10 +2,12 @@ require('dotenv').config();
 const request = require('request');
 const tmi = require('tmi.js');
 const fs = require('fs');
+var Timer = require('easytimer.js').Timer;
+const si = require('systeminformation');
+const channels= require('./channels.json');
 var channelListJSON = fs.readFileSync("./channels.json");
 var channelList = JSON.parse(channelListJSON);
-console.log(channelList);
-let timer=true;
+let cooldown=true;
 //set options for chatclient, where password is your OAuthtoken
 const botoptions = {
     options:{
@@ -37,7 +39,13 @@ client.on('chat', (channel,user,message,self)=> {
         client.say(channel , "Here you'll find my github repository Okayge 👉 https://github.com/helltf/helltfbot . Nevertheless it's Pepege Code  ");
     }
     if(message==='hb ping'){
-        client.say(channel,'PONG! Programm is currently running');
+        si.cpuTemperature().then((data)=>{
+            client.say(channel,'PONG! Programm is up for ' + timer.getTimeValues().days+ ' days, ' + timer.getTimeValues().hours + ' hours, ' + timer.getTimeValues().minutes + ' min' +
+         data.main);
+        })
+    }
+    if(message==='hb commands'){
+        clients.say(channel,'All available commands are hb [git,ping,supported,removestreamer,addstreamer,notify,removeme]');
     }
     if(message==='hb supported'){
         var result="";
@@ -46,34 +54,57 @@ client.on('chat', (channel,user,message,self)=> {
         }
         client.say(channel,'Currently available streamers are ' + result);
     }
+    if(message.substring(0,17)==='hb removestreamer'){
+        if(user['display-name']==='helltf'){
+            var words = message.split(' ');
+            var contains= false;
+            for(let[channelName] of Object.entries(channelList) ){
+                if(channelName===words[2])contains=true;
+            }
+            if(words.length===3&&channelList&&contains){
+                delete channelList[words[2]];
+                client.say(channel,'Successfully removed ' + words[2] + ' from channels!');
+                console.log(channelList);
+                toJSON();
+                setTimeout(()=>{
+                    initAvailableChannel()
+                },5000)  
+            }
+            else if(!contains){
+                client.say(channel, 'Sry but the channel is not in the list!')
+            }
+            else{
+                client.say(channel,'Sorry, wrong input provided: Command is hb removestreamer <name> !');
+            }
+
+        }
+    }
     if(message.substring(0,14)==='hb addstreamer'){
         if(user['display-name']==='helltf'){
-            console.log('helltf');
             var words = message.split(' ');
             if(words.length===4){
-                console.log('in if');
                 var channelInfo={}
                 channelInfo.id=parseInt(words[3]);
                 channelInfo.notified="";
                 channelList[words[2]]=channelInfo;
-                client.say(channel,'Successfully added ' + words[2] + 'to channels!');
+                client.say(channel,'Successfully added ' + words[2] + ' to channels!');
                 toJSON();
                 setTimeout(()=>{
                     initAvailableChannel()
                 },5000)  
             }
             else{
-                client.say(channel,'Sorry, wrong input provided: Command is hb add <name> <id>');
+                client.say(channel,'Sorry, wrong input provided: Command is hb addstreamer <name> <id>');
             }
         }
         else{
             client.say(channel,'Sorry you are not authorized to perform this command!')
         }
     }
-    if(message.substring(0,9)==='hb remove'){
-        var streamer = message.substring(10,message.length);
+    if(message.substring(0,11)==='hb removeme'){
+        var streamer = message.substring(12,message.length);
         if(channelList[streamer]!=undefined&&enabledChannels[streamer]!=undefined){
-            if(timer){
+            if(cooldown){
                 if(channelList[streamer].notified.includes(user['display-name'])){
                     var index = channelList[streamer].notified.indexOf(user['display-name']);
                     var stringp1 = channelList[streamer].notified.substring(0,index);
@@ -149,17 +180,14 @@ client.on('chat', (channel,user,message,self)=> {
     }
 });
 const toJSON = ()=>{
-    timer=false;
-    console.log('Writing');
+    cooldown=false;
     fs.writeFile("./channels.json", JSON.stringify(channelList), function writeJSON(err) {
         if (err) return console.log(err);
     });
     setTimeout(()=>{
-    timer=true;
+    cooldown=true;
     var channelListJSON = fs.readFileSync("./channels.json");
     var channelList = JSON.parse(channelListJSON);
-    console.log(channelList);
-    console.log('list has been updated');
     },5000)
 
 }
@@ -187,7 +215,6 @@ async function initializeAT(url,callback){
             if(err){
                 return console.log(err);
             }
-            console.log('Status: ${res.statusCode}');
             callback(res);
         });
 };
@@ -258,6 +285,7 @@ async function connect(){
     await client.connect()
     try{
         refreshData()
+        timer.start({precision: 'seconds'});
     }
     catch(err){
         console.log(err);
@@ -269,6 +297,7 @@ async function connect(){
 let enabledChannels = {}
 initAT();
 initAvailableChannel();
+var timer = new Timer();
 setTimeout(()=>{
     connect();
 },2000)
