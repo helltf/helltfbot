@@ -42,6 +42,8 @@ client.on('chat', (channel,user,message,self)=> {
         si.cpuTemperature().then((data)=>{
             client.say(channel,'PONG! Programm is up for ' + timer.getTimeValues().days+ ' days, ' + timer.getTimeValues().hours + ' hours, ' + timer.getTimeValues().minutes + ' min' +
          data.main);
+        }).catch((err)=>{
+            console.log(err);
         })
     }
     if(message==='hb commands'){
