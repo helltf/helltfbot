@@ -39,6 +39,13 @@ client.on('chat', (channel,user,message,self)=> {
     if(message==='hb ping'){
         client.say(channel,'PONG! Programm is currently running');
     }
+    if(message==='hb supported'){
+        var result="";
+        for(let[channelName] of Object.entries(channelList)){
+            result+= ' '+ channelName;
+        }
+        client.say(channel,'Currently available streamers are ' + result);
+    }
     if(message.substring(0,14)==='hb addstreamer'){
         if(user['display-name']==='helltf'){
             console.log('helltf');
@@ -56,7 +63,7 @@ client.on('chat', (channel,user,message,self)=> {
                 },5000)  
             }
             else{
-                clients.say(channel,'Sorry, wrong input provided: Command is hb add <name> <id>');
+                client.say(channel,'Sorry, wrong input provided: Command is hb add <name> <id>');
             }
         }
         else{
