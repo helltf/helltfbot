@@ -40,8 +40,8 @@ client.on('chat', (channel,user,message,self)=> {
     }
     if(message==='hb ping'){
         si.cpuTemperature().then((data)=>{
-            client.say(channel,'PONG! Programm is up for ' + timer.getTimeValues().days+ ' days, ' + timer.getTimeValues().hours + ' hours, ' + timer.getTimeValues().minutes + ' min ' +
-         data.main);
+            client.say(channel,'PONG! Programm is up for ' + timer.getTimeValues().days+ ' days, ' + timer.getTimeValues().hours + ' hours, ' + timer.getTimeValues().minutes + ' min. Current CPU-temperature is ' +
+         data.main + '°C');
         }).catch((err)=>{
             console.log(err);
         })
@@ -223,9 +223,16 @@ async function initializeAT(url,callback){
 async function refreshData(){
     for (let [channelName,channeldata]  of Object.entries(enabledChannels)){
         await doChannelAPIUpdate(channelName,channeldata.id,async (data)=>{
+            try{
             await updateChannelProperty(channelName, "title", data.title);
             await updateChannelProperty(channelName, "game_id", data.game_id);
             await updateChannelProperty(channelName, "is_live", data.is_live);
+        }catch(err){
+            console.log(err);
+            await updateChannelProperty(channelName, "title", data.title);
+            await updateChannelProperty(channelName, "game_id", data.game_id);
+            await updateChannelProperty(channelName, "is_live", data.is_live);
+        }
         });
     }
 }
@@ -240,7 +247,8 @@ async function doChannelAPIUpdate(channelName,channelID,callback){
     };
         request.get(Getoptions,(err,res,body)=>{
             if(err)return console.log(err);
-            var job=JSON.parse(body);
+            try{
+                var job=JSON.parse(body);
             for(i=0;i<job.data.length;++i){
                 if(job.data[i].display_name===channelName){
                     var data=job.data[i];
@@ -248,7 +256,9 @@ async function doChannelAPIUpdate(channelName,channelID,callback){
                 }
             }
             callback(data);
-        });
+        }catch(err){
+            console.log(err);
+        }});
     }
 async function updateChannelProperty(channelName,key,value){
     let oldValue= enabledChannels[channelName][key];
@@ -262,20 +272,20 @@ async function updateChannelProperty(channelName,key,value){
 }
 async function notify(key, value,channelName){
     switch(key){
-        case 'title':client.say('anniiikaa',' PagMan 👉 ' + channelName+ ' has changed his title to ' + value + ' DinkDonk ' + channelList[channelName].notified);
-            client.action('helltf',+ ' PagMan 👉 ' + channelName+ ' has changed his title to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
+        case 'title':client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his title to ' + value + ' DinkDonk ' + channelList[channelName].notified);
+            client.say('helltf', 'PagMan 👉 ' + channelName+ ' has changed his title to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
         break;
         case 'is_live':  if(value){
-            client.action('anniiikaa','  PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
-            client.action('helltf','  PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
+            client.say('anniiikaa','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
+            client.say('helltf','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
         }
         else{
-            client.action('anniiikaa','  FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
-            client.action('helltf','  FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+            client.say('anniiikaa','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+            client.say('helltf','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
         }
         break;
-        case'game_id':client.action('anniiikaa',' PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
-        client.action('helltf',' PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
+        case'game_id':client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
+        client.say('helltf','PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
         break;
         default:client.say('helltf','wrong key helltf DinkDonk');
     }
@@ -286,7 +296,6 @@ async function initAT(){
         return AT;
         })
 }
-
 async function connect(){
     await client.connect()
     try{
@@ -299,7 +308,6 @@ async function connect(){
     setInterval(refreshData,5*1000);
     setInterval(initAT,3300000)
 }
-
 let enabledChannels = {}
 initAT();
 initAvailableChannel();
