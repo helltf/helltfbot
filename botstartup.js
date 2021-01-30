@@ -47,7 +47,7 @@ client.on('chat', (channel,user,message,self)=> {
         })
     }
     if(message==='hb commands'){
-        client.say(channel,'All available commands are hb [git,ping,supported,removestreamer,addstreamer,notify,removeme]');
+        client.say(channel,'All available commands are hb [git, ping, supported, removestreamer, addstreamer, notify, removeme, notified]');
     }
     if(message==='hb supported'){
         var result="";
@@ -55,6 +55,37 @@ client.on('chat', (channel,user,message,self)=> {
             result+= ' '+ channelName;
         }
         client.say(channel,'Currently available streamers are ' + result);
+    }
+    if(message.substring(0,11)==='hb notified'){
+        var words = message.split(' ');
+        var result= '';
+        if(words.length===2){
+            for(let[channelName,channeldata]of Object.entries(channelList)){
+                if(channeldata.notified.includes(user['display-name'])){
+                    result+= ' ' + channelName;
+                }
+            }
+            client.say(channel,'Your notified streamer(s) are' + result);
+        }
+        else if(words.length===3){
+            var hit=0;
+            checkuser =words[2]
+            for(let[channelName,channeldata]of Object.entries(channelList)){
+                if(channeldata.notified.includes(checkuser)){
+                    hit=hit+1;
+                    result+= ' ' + channelName;
+                }
+            }
+            if(hit===0){
+                client.say(channel, "Sry couldn't find that user in my database :( ");
+            }
+            else{
+                client.say(channel, checkuser + ' notified streamer(s) are' + result);
+            }
+        }
+        else{
+            client.say(channel,'Wrong input provided FeelsBadMan');
+        }
     }
     if(message.substring(0,17)==='hb removestreamer'){
         if(user['display-name']==='helltf'){
@@ -84,23 +115,24 @@ client.on('chat', (channel,user,message,self)=> {
     if(message.substring(0,14)==='hb addstreamer'){
         if(user['display-name']==='helltf'){
             var words = message.split(' ');
-            if(words.length===4){
-                var channelInfo={}
-                channelInfo.id=parseInt(words[3]);
-                channelInfo.notified="";
-                channelList[words[2]]=channelInfo;
-                client.say(channel,'Successfully added ' + words[2] + ' to channels!');
-                toJSON();
-                setTimeout(()=>{
-                    initAvailableChannel()
-                },5000)  
+            if(words.length===3){
+            doChannelAPIUpdate(words[2],async (data)=>{
+                    var channelInfo={}
+                    channelInfo.id=parseInt(data.id);
+                    channelInfo.notified="";
+                    channelList[words[2]]=channelInfo;
+                    client.say(channel,'Successfully added ' + words[2] + ' to channels!');
+                    toJSON();
+                    setTimeout(()=>{
+                        initAvailableChannel()
+                    },5000)  
+                })
             }
             else{
-                client.say(channel,'Sorry, wrong input provided: Command is hb addstreamer <name> <id>');
+                client.say(channel,'Sorry, wrong input provided: Command is hb addstreamer <name>');
             }
-        }
-        else{
-            client.say(channel,'Sorry you are not authorized to perform this command!')
+        }else{
+            client.say(channel,'Sorry you are not authorized to perform this command!');
         }
     }
     if(message.substring(0,11)==='hb removeme'){
@@ -188,8 +220,9 @@ const toJSON = ()=>{
     });
     setTimeout(()=>{
     cooldown=true;
-    var channelListJSON = fs.readFileSync("./channels.json");
-    var channelList = JSON.parse(channelListJSON);
+    channelListJSON = fs.readFileSync("./channels.json");
+    channelList = JSON.parse(channelListJSON);
+    console.log(channelList);
     },5000)
 
 }
@@ -222,7 +255,7 @@ async function initializeAT(url,callback){
 };
 async function refreshData(){
     for (let [channelName,channeldata]  of Object.entries(enabledChannels)){
-        await doChannelAPIUpdate(channelName,channeldata.id,async (data)=>{
+        await doChannelAPIUpdate(channelName,async (data)=>{
             try{
             await updateChannelProperty(channelName, "title", data.title);
             await updateChannelProperty(channelName, "game_id", data.game_id);
@@ -236,7 +269,7 @@ async function refreshData(){
         });
     }
 }
-async function doChannelAPIUpdate(channelName,channelID,callback){
+async function doChannelAPIUpdate(channelName,callback){
     const Getoptions={
         url:process.env.GET_LIVE + channelName,
         method:'GET',
