@@ -303,6 +303,25 @@ async function updateChannelProperty(channelName,key,value){
         enabledChannels[channelName][key]=value;
     }
 }
+async function getGame(gameid,callback){
+    const gameoptions={
+        url:process.env.GET_GAME + gameid,
+        method:'GET',
+        headers:{
+            'Client-ID':process.env.CLIENT_ID,
+            'Authorization': 'Bearer ' + AT
+        }
+    };
+    request.get(gameoptions,(err,res,body)=>{
+        if(err){
+            return console.log(err);
+        }
+        var job = JSON.parse(res.body);
+        var data = job.data[0].name;
+        callback(data);
+    });
+
+}
 async function notify(key, value,channelName){
     switch(key){
         case 'title':client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his title to ' + value + ' DinkDonk ' + channelList[channelName].notified);
@@ -317,8 +336,10 @@ async function notify(key, value,channelName){
             client.say('helltf','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
         }
         break;
-        case'game_id':client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
-        client.say('helltf','PagMan 👉 ' + channelName+ ' has changed his game to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
+        case'game_id':getGame(value,(data)=>{
+            client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
+            client.say('helltf','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
+        })
         break;
         default:client.say('helltf','wrong key helltf DinkDonk');
     }
