@@ -5,8 +5,6 @@ const fs = require('fs');
 var Timer = require('easytimer.js').Timer;
 const si = require('systeminformation');
 const channels= require('./channels.json');
-var channelListJSON = fs.readFileSync("./channels.json");
-var channelList = JSON.parse(channelListJSON);
 let cooldown=true;
 //set options for chatclient, where password is your OAuthtoken
 const botoptions = {
@@ -35,6 +33,7 @@ client.on('chat', (channel,user,message,self)=> {
     if(message==='hb titlecheck'){
         client.say(channel,'deprecated');
     }
+
     if(message==='hb git'){
         client.say(channel , "Here you'll find my github repository Okayge 👉 https://github.com/helltf/helltfbot . Nevertheless it's Pepege Code  ");
     }
@@ -96,8 +95,8 @@ client.on('chat', (channel,user,message,self)=> {
             }
             if(words.length===3&&channelList&&contains){
                 delete channelList[words[2]];
+                delete enabledChannels[words[2]];
                 client.say(channel,'Successfully removed ' + words[2] + ' from channels!');
-                console.log(channelList);
                 toJSON();
                 setTimeout(()=>{
                     initAvailableChannel()
@@ -117,17 +116,28 @@ client.on('chat', (channel,user,message,self)=> {
             var words = message.split(' ');
             if(words.length===3){
             doChannelAPIUpdate(words[2],async (data)=>{
-                    var channelInfo={}
-                    channelInfo.id=parseInt(data.id);
-                    channelInfo.notified="";
-                    channelList[words[2]]=channelInfo;
-                    client.say(channel,'Successfully added ' + words[2] + ' to channels!');
-                    toJSON();
-                    setTimeout(()=>{
-                        initAvailableChannel()
-                    },5000)  
-                })
+                try{
+                    if(data!=undefined){
+                        var channelInfo={}
+                        channelInfo.id=parseInt(data.id);
+                        channelInfo.notified="";
+                        channelList[words[2]]=channelInfo;
+                        client.say(channel,'Successfully added ' + words[2] + ' to channels!');
+                        toJSON();
+                        setTimeout(()=>{
+                            initAvailableChannel()
+                        },5000)  
+                    }
+                   else{
+                       client.say(channel,"Couldn't find that streamer!");
+                   }
+                }
+                catch(err){
+                    console.log(err);
+                }
             }
+)
+        }
             else{
                 client.say(channel,'Sorry, wrong input provided: Command is hb addstreamer <name>');
             }
@@ -187,30 +197,7 @@ client.on('chat', (channel,user,message,self)=> {
     }
     //event if message starts with hb livecheck
     if(message.substring(0,12)==='hb livecheck'){
-        var streamer = message.substring(13,message.length);
-        //GET request to API -> returns JSON in response 
-        getLive(process.env.GET_GAMES,AT,(response) =>{
-        var ob=JSON.parse(response.body);
-        let hit=0;
-        if(ob!=undefined){
-            //if our JSON defined search for the right streamer in Array-> output islive ? live : offline
-            for(i=0;i<ob.data.length;++i){
-                if(ob.data[i].display_name===streamer){
-                    client.say(channel, ob.data[i].is_live? ob.data[i].display_name +' is currently live FeelsAmazingMan': ob.data[i].display_name + ' is currently offline FeelsBadMan');
-                    hit=1;
-                    break;
-                }
-            }
-            // if streamer is not in Array -> not found 
-            if(hit===0){
-                client.say(channel,'no streamer found');
-            }
-        }
-        // query cant look up that name -> invalid input
-        else{
-            client.say(channel,'invalid input');
-        }
-        },streamer);
+        client.say(channel,'deprecated');
     }
 });
 const toJSON = ()=>{
@@ -222,7 +209,6 @@ const toJSON = ()=>{
     cooldown=true;
     channelListJSON = fs.readFileSync("./channels.json");
     channelList = JSON.parse(channelListJSON);
-    console.log(channelList);
     },5000)
 
 }
@@ -283,7 +269,7 @@ async function doChannelAPIUpdate(channelName,callback){
             try{
                 var job=JSON.parse(body);
             for(i=0;i<job.data.length;++i){
-                if(job.data[i].display_name===channelName){
+                if(job.data[i].broadcaster_login===channelName){
                     var data=job.data[i];
                     break;
                 }
@@ -316,9 +302,28 @@ async function getGame(gameid,callback){
         if(err){
             return console.log(err);
         }
-        var job = JSON.parse(res.body);
-        var data = job.data[0].name;
-        callback(data);
+        if(res!=undefined){
+            var job = JSON.parse(res.body);
+            console.log(job)
+            if(data!=[]){
+                try{
+                    var data = job.data[0].name;
+                    callback(data);
+                }
+                catch(err){
+                    console.log(err);
+                    callback('Error');
+                }
+                
+            }
+            else{
+                callback('error');
+            }
+            
+        }else{
+            callback('error');
+        }
+        
     });
 
 }
@@ -336,9 +341,18 @@ async function notify(key, value,channelName){
             client.say('helltf','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
         }
         break;
-        case'game_id':getGame(value,(data)=>{
-            client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
-            client.say('helltf','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
+        case'game_id':
+        console.log(value);
+        getGame(value,(data)=>{
+            if(data!=undefined){
+                client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
+                client.say('helltf','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
+            }
+            else{
+                client.say('helltf', 'Error while fetching game for ' + channelName);
+                client.say('anniiikaa', 'Error while fetching game for ' + channelName);
+            }
+            
         })
         break;
         default:client.say('helltf','wrong key helltf DinkDonk');
