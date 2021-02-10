@@ -5,7 +5,9 @@ const fs = require('fs');
 var Timer = require('easytimer.js').Timer;
 const si = require('systeminformation');
 const channels= require('./channels.json');
-let cooldown=true;
+var channelListJSON = fs.readFileSync("./channels.json");
+var channelList = JSON.parse(channelListJSON);
+let cooldown=false;
 //set options for chatclient, where password is your OAuthtoken
 const botoptions = {
     options:{
@@ -148,7 +150,7 @@ client.on('chat', (channel,user,message,self)=> {
     if(message.substring(0,11)==='hb removeme'){
         var streamer = message.substring(12,message.length);
         if(channelList[streamer]!=undefined&&enabledChannels[streamer]!=undefined){
-            if(cooldown){
+            if(!cooldown){
                 if(channelList[streamer].notified.includes(user['display-name'])){
                     var index = channelList[streamer].notified.indexOf(user['display-name']);
                     var stringp1 = channelList[streamer].notified.substring(0,index);
@@ -201,12 +203,12 @@ client.on('chat', (channel,user,message,self)=> {
     }
 });
 const toJSON = ()=>{
-    cooldown=false;
+    cooldown=true;
     fs.writeFile("./channels.json", JSON.stringify(channelList), function writeJSON(err) {
         if (err) return console.log(err);
     });
     setTimeout(()=>{
-    cooldown=true;
+    cooldown=false;
     channelListJSON = fs.readFileSync("./channels.json");
     channelList = JSON.parse(channelListJSON);
     },5000)
@@ -219,6 +221,7 @@ const initAvailableChannel= ()=>{
         channelInfo.title=undefined;
         channelInfo.is_live=undefined;
         channelInfo.game_id=undefined;
+        channelInfo.notifycd=false;
         enabledChannels[channelName]=channelInfo;  
     }
 }
@@ -305,7 +308,7 @@ async function getGame(gameid,callback){
         if(res!=undefined){
             var job = JSON.parse(res.body);
             console.log(job)
-            if(data!=[]){
+            if(job.data[0]!=[]){
                 try{
                     var data = job.data[0].name;
                     callback(data);
@@ -332,13 +335,20 @@ async function notify(key, value,channelName){
         case 'title':client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his title to ' + value + ' DinkDonk ' + channelList[channelName].notified);
             client.say('helltf', 'PagMan 👉 ' + channelName+ ' has changed his title to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
         break;
-        case 'is_live':  if(value){
-            client.say('anniiikaa','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
-            client.say('helltf','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
-        }
-        else{
-            client.say('anniiikaa','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
-            client.say('helltf','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+        case 'is_live':
+        if(!enabledChannels[channelName].notifycd){
+            if(value){
+                client.say('anniiikaa','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
+                client.say('helltf','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
+            }
+            else{
+                client.say('anniiikaa','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+                client.say('helltf','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+            }
+            enabledChannels[channelName].notifycd=true;
+            setTimeout(()=>{
+                enabledChannels[channelName].notifycd=false;
+            },60000)
         }
         break;
         case'game_id':
