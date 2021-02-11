@@ -1,28 +1,18 @@
 require('dotenv').config();
+const botconfig= require('./config.json');
 const request = require('request');
 const tmi = require('tmi.js');
 const fs = require('fs');
 var Timer = require('easytimer.js').Timer;
 const si = require('systeminformation');
 const channels= require('./channels.json');
+var configJSON = fs.readFileSync("./config.json");
+
 var channelListJSON = fs.readFileSync("./channels.json");
 var channelList = JSON.parse(channelListJSON);
 let cooldown=false;
 //set options for chatclient, where password is your OAuthtoken
-const botoptions = {
-    options:{
-        debug: true
-    },
-    connection:{
-        cluster:'aws',
-        reconnect:true,
-    },
-    identity:{
-        username:'helltfbot',
-        password:process.env.IRC_PASSWORD
-    },
-    channels:['helltf','anniiikaa']
-};
+const botoptions = botconfig;
 //create new istance of Client
 const client= new tmi.Client(botoptions);
 
@@ -35,7 +25,42 @@ client.on('chat', (channel,user,message,self)=> {
     if(message==='hb titlecheck'){
         client.say(channel,'deprecated');
     }
-
+    if(message==='hb addmychannel'){
+        var hit=false;
+        var newChannel = user['display-name'];
+        for(var i=0;i<botconfig.channels.length;++i){
+            if(botconfig.channels[i]===newChannel||botconfig.channels[i]==='#' + newChannel){
+               hit=true;
+            }
+        }
+        if(hit){
+            client.say(channel,'Sorry but you are already in the channelslist!');
+        }
+        else{
+            botconfig.channels.push(newChannel);
+            client.say(channel,'Upon next restart helltfbot will be available in your channel FeelsOkayMan');
+            editConfig();
+        }
+    }
+    if(message==='hb removemychannel'){
+        var hit=false;
+        var index;
+        var newChannel = user['display-name'];
+        for(var i=0;i<botconfig.channels.length;++i){
+            if(botconfig.channels[i]===newChannel||botconfig.channels[i]==='#' + newChannel){
+               hit=true;
+               index=i;
+            }
+        }
+        if(hit){
+            botconfig.channels.splice(index,1);
+            client.say(channel,'Upon next restart helltfbot will be no longer available in your channel FeelsOkayMan');
+            editConfig()
+        }
+        else{
+            client.say(channel,'Sorry but you are not in the channelslist!')
+        }
+    }
     if(message==='hb git'){
         client.say(channel , "Here you'll find my github repository Okayge 👉 https://github.com/helltf/helltfbot . Nevertheless it's Pepege Code  ");
     }
@@ -48,7 +73,32 @@ client.on('chat', (channel,user,message,self)=> {
         })
     }
     if(message==='hb commands'){
-        client.say(channel,'All available commands are hb [git, ping, supported, removestreamer, addstreamer, notify, removeme, notified]');
+        client.say(channel,'All available commands are hb [git, ping, supported, removestreamer, addstreamer, notify, removeme, notified,addmychannel,removemychannel] You can get more information about commands with hb commandinfo <cmd> ! ');
+    }
+    if(message.substring(0,14)==='hb commandinfo'){
+        var command=message.substring(15,message.length);
+        switch(command){
+            case 'git':client.say(channel,"It's a link to my git page");
+            break;
+            case 'ping':client.say(channel,"If the programm is running the bot will send a Pong message in the channel!")
+            break;
+            case 'supported':client.say(channel,'Bot will send a message with all available channels for notifies');
+            break;
+            case 'removestreamer': client.say(channel,'Admincommand to remove a streamer from the notify list');
+            break;
+            case 'addstreamer': client.say(channel,'Admincommand to add a new streamer to the notify list');
+            break;
+            case'notify':client.say(channel,'Correct command usage is hb notify <streamer>, to get notified on an event for a certain streamer');
+            break;
+            case'removeme':client.say(channel,'Currect usage is hb removeme <streamer>, to remove yourself from notifications for a certain streamer');
+            break;
+            case'addmychannel':client.say(channel,'Upon next restart, the bot will send notifications in your channel');
+            break;
+            case'removemychannel':client.say(channel,'Upon next restart, the bot will no longer send notifications in your chat');
+            break;
+            default:client.say(channel,'the given command is not supported');
+            break;
+        }
     }
     if(message==='hb supported'){
         var result="";
@@ -330,44 +380,54 @@ async function getGame(gameid,callback){
     });
 
 }
+const editConfig = ()=>{
+    fs.writeFile("./config.json", JSON.stringify(botconfig), function writeJSON(err) {
+        if (err) return console.log(err);
+    });
+}
 async function notify(key, value,channelName){
     switch(key){
-        case 'title':client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his title to ' + value + ' DinkDonk ' + channelList[channelName].notified);
-            client.say('helltf', 'PagMan 👉 ' + channelName+ ' has changed his title to ' + value+ ' DinkDonk ' + channelList[channelName].notified);
+        case 'title':
+            for(var i=0;i<botconfig.channels.length;++i){
+                var channel=botconfig.channels[i];
+                client.say(channel,'PagMan 👉 ' + channelName+ ' has changed his title to ' + value + ' DinkDonk ' + channelList[channelName].notified);
+            }
         break;
         case 'is_live':
+            for(var i=0;i<botconfig.channels.length;++i){
+                var channel=botconfig.channels[i];
         if(!enabledChannels[channelName].notifycd){
             if(value){
-                client.say('anniiikaa','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
-                client.say('helltf','PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
+                client.say(channel,'PagMan 👉 ' + channelName+ ' went Live'+ ' DinkDonk ' + channelList[channelName].notified);
             }
             else{
-                client.say('anniiikaa','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
-                client.say('helltf','FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+                client.say(channel,'FeelsBadMan 👉 ' + channelName+ ' went offline'+ ' DinkDonk ' + channelList[channelName].notified);
+                }
             }
-            enabledChannels[channelName].notifycd=true;
-            setTimeout(()=>{
-                enabledChannels[channelName].notifycd=false;
-            },60000)
         }
+        enabledChannels[channelName].notifycd=true;
+        setTimeout(()=>{
+            enabledChannels[channelName].notifycd=false;
+        },60000)
         break;
         case'game_id':
         console.log(value);
         getGame(value,(data)=>{
             if(data!=undefined){
-                client.say('anniiikaa','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
-                client.say('helltf','PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
+                for(var i=0;i<botconfig.channels.length;++i){
+                    var channel=botconfig.channels[i];
+                client.say(channel,'PagMan 👉 ' + channelName+ ' has changed his game to ' + data+ ' DinkDonk ' + channelList[channelName].notified);
             }
+        }
             else{
-                client.say('helltf', 'Error while fetching game for ' + channelName);
-                client.say('anniiikaa', 'Error while fetching game for ' + channelName);
+                client.say(channel, 'Error while fetching game for ' + channelName);
             }
             
         })
         break;
         default:client.say('helltf','wrong key helltf DinkDonk');
+        }
     }
-}
 async function initAT(){
     initializeAT(process.env.TOKEN_URL,(res)=>{
         AT=res.body.access_token;
