@@ -415,7 +415,7 @@ async function notify(key, value,channelName){
         break;
         case 'is_live':
             if(!enabledChannels[channelName].notifycd){
-                var messages =  await buildMessages(channelList[channelName].notified.live,key,channelName,value);
+                var messages =  await buildMessages(channelList[channelName].notified.status,key,channelName,value);
                 for(var i=0;i<channelList[channelName].outputchannels.length;++i){
                     var channel=channelList[channelName].outputchannels[i];
                     if(client.getChannels().includes(channel)||client.getChannels().includes("#"+ channel)){
@@ -467,6 +467,9 @@ async function notify(key, value,channelName){
         }
     }
 const createStrings = (array,firstmessage,othermessage,key,channelName) =>{
+    console.log(key);
+    console.log(array);
+    console.log(channelName);
     var messages  = [];
     var firstmessage;
     var othermessage;
