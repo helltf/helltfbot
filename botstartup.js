@@ -267,7 +267,7 @@ client.on('chat', (channel,user,message,self)=> {
                 client.say(channel, 'Command is currently on cooldown. Please wait a second ppHop');
             }
         }else{
-            client.say(channel,'Sorry but you can only register from events like status, title or game!');
+            client.say(channel,'Sorry but you can only register for events like status, title or game!');
         }
         }
         else{
@@ -414,17 +414,19 @@ async function notify(key, value,channelName){
             }
         break;
         case 'is_live':
-            var messages =  await buildMessages(channelList[channelName].notified.title,key,channelName,value);
-            for(var i=0;i<channelList[channelName].outputchannels.length;++i){
-                var channel=channelList[channelName].outputchannels[i];
-                if(client.getChannels().includes(channel)||client.getChannels().includes("#"+ channel)){
-                   messages.forEach(message=>client.say(channel,message));
+            if(!enabledChannels[channelName].notifycd){
+                var messages =  await buildMessages(channelList[channelName].notified.live,key,channelName,value);
+                for(var i=0;i<channelList[channelName].outputchannels.length;++i){
+                    var channel=channelList[channelName].outputchannels[i];
+                    if(client.getChannels().includes(channel)||client.getChannels().includes("#"+ channel)){
+                       messages.forEach(message=>client.say(channel,message));
+                    }
                 }
+            enabledChannels[channelName].notifycd=true;
+            setTimeout(()=>{
+                enabledChannels[channelName].notifycd=false;
+            },180000)
             }
-        enabledChannels[channelName].notifycd=true;
-        setTimeout(()=>{
-            enabledChannels[channelName].notifycd=false;
-        },180000)
         break;
         case'game_id':
         var messages =await   buildMessages(channelList[channelName].notified.game,key,channelName,value);
@@ -470,17 +472,19 @@ const createStrings = (array,firstmessage,othermessage,key,channelName) =>{
     var othermessage;
     var maxstringlength=420;
     var index;
-for(var i =0;i<channelList[channelName].notified[key].length;++i){
+for(var i =0;i<array.length;++i){
     if(firstmessage.length<maxstringlength){
         firstmessage += " " + array[i];
+        console.log(array[i]);
     }
     else{
         index=i;
         break;
     }
+    console.log(firstmessage);
 }messages.push(firstmessage);
     var moremessage=othermessage;
-    for(index;index<channelList[channelName].notified[key].length;++index){
+    for(index;index<array.length;++index){
         if(moremessage.length<maxstringlength){
             moremessage+= " "+ array[index];
         }
