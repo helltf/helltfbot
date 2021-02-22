@@ -6,6 +6,7 @@ const fs = require('fs');
 var Timer = require('easytimer.js').Timer;
 const si = require('systeminformation');
 const channels= require('./channels.json');
+const { emitKeypressEvents } = require('readline');
 var channelListJSON = fs.readFileSync("./channels.json");
 var channelList = JSON.parse(channelListJSON);
 let cooldown=false;
@@ -110,11 +111,12 @@ client.on('chat', (channel,user,message,self)=> {
         }
     }
     if(message==='hb supported'){
-        var result="";
+        var array = [];
         for(let[channelName] of Object.entries(channelList)){
-            result+= ' '+ channelName;
+           array.push(channelName);
         }
-        client.say(channel,'Currently available streamers are ' + result);
+        var messages= createStrings(array,"Currently available streamers are  ","","","")
+        messages.forEach(message => client.say(channel,message))
     }
     if(message.substring(0,11)==='hb notified'){
         var words = message.split(' ');
@@ -392,8 +394,13 @@ async function getGame(gameid,callback){
         }
     };
     let response = await promisifiedRequest(gameoptions);
-    var resjson  = JSON.parse(response.body);
-    var gamename = resjson.data[0].name;
+    if(resjson!=undefined){
+        var resjson  = JSON.parse(response.body);
+        var gamename = resjson?.data?.[0]?.name;
+    }
+    else{
+        var gamename = "error";
+    }
     return gamename
 
 }
@@ -467,9 +474,6 @@ async function notify(key, value,channelName){
         }
     }
 const createStrings = (array,firstmessage,othermessage,key,channelName) =>{
-    console.log(key);
-    console.log(array);
-    console.log(channelName);
     var messages  = [];
     var firstmessage;
     var othermessage;
@@ -478,13 +482,11 @@ const createStrings = (array,firstmessage,othermessage,key,channelName) =>{
 for(var i =0;i<array.length;++i){
     if(firstmessage.length<maxstringlength){
         firstmessage += " " + array[i];
-        console.log(array[i]);
     }
     else{
         index=i;
         break;
     }
-    console.log(firstmessage);
 }messages.push(firstmessage);
     var moremessage=othermessage;
     for(index;index<array.length;++index){
