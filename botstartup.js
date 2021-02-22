@@ -399,9 +399,9 @@ async function getGame(gameid,callback){
         }
     };
     let response = await promisifiedRequest(gameoptions);
-    if(resjson!=undefined){
+    if(!response.body===undefined){
         var resjson  = JSON.parse(response.body);
-        var gamename = resjson?.data?.[0]?.name;
+        var gamename = resjson.data[0].name;
     }
     else{
         var gamename = "error";
