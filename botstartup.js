@@ -6,7 +6,6 @@ const fs = require('fs');
 var Timer = require('easytimer.js').Timer;
 const si = require('systeminformation');
 const channels= require('./channels.json');
-const { emitKeypressEvents } = require('readline');
 var channelListJSON = fs.readFileSync("./channels.json");
 var channelList = JSON.parse(channelListJSON);
 let cooldown=false;
@@ -106,6 +105,9 @@ client.on('chat', (channel,user,message,self)=> {
             break;
             case'removemychannel':client.say(channel,'Upon next restart, the bot will no longer send notifications in your chat');
             break;
+            case 'notified':
+                client.say(channel, 'right usage is hb notified <event> <username>, username is optional -> returns a message containing all notified streamer for an event for you or if  specified for a user');
+                break;
             default:client.say(channel,'the given command is not supported');
             break;
         }
@@ -120,15 +122,18 @@ client.on('chat', (channel,user,message,self)=> {
     }
     if(message.substring(0,11)==='hb notified'){
         var words = message.split(' ');
-        var result= '';
-        var key = words[2]
-        if(words.length===3){
+        var arr= [];
+        var key = words[2];
+        var messages=[];
+        if(words.length===3&&key==='game'&&key==='status'&&key==='title'){
             for(let[channelName,channeldata]of Object.entries(channelList)){
-                if(channeldata.notified[key].includes(user['display-name'])){
-                    result+= ' ' + channelName;
+                if(channeldata.notified[key].includes(user['display-name'].toLowerCase())){
+                    arr.push(channelName);
+                     
                 }
             }
-            client.say(channel,'Your notified streamer(s) are' + result);
+            messages =createStrings(arr,`Your notified streamer(s) on ${key}change event are`,"",key,"")
+            messages.forEach(message=>client.say(channel,message));
         }
         else if(words.length===4){
             var hit=0;
@@ -197,8 +202,8 @@ client.on('chat', (channel,user,message,self)=> {
                             channelList[streamer]=channelInfo;
                             client.say(channel,`${streamer} is new and a new instance has been created!`);
                         }
-                            if(!channelList[streamer].outputchannels.includes(user['display-name'])){
-                                channelList[streamer].outputchannels.push(user['display-name']);
+                            if(!channelList[streamer].outputchannels.includes(user['display-name'].toLowerCase())){
+                                channelList[streamer].outputchannels.push(user['display-name'].toLowerCase);
                                 client.say(channel,`Successfully added ${streamer} to messages in channel ${user['display-name']}`);
                             }
                             else{
@@ -227,8 +232,8 @@ client.on('chat', (channel,user,message,self)=> {
         if(channelList[streamer]!=undefined&&enabledChannels[streamer]!=undefined&&parts.length===4){
             if(key==='status'||key==='title'||key==='game'){
             if(!cooldown){
-                if(channelList[streamer].notified[key].includes(user['display-name'])){
-                    var index = channelList[streamer].notified[key].indexOf(user['display-name']);
+                if(channelList[streamer].notified[key].includes(user['display-name'].toLowerCase())){
+                    var index = channelList[streamer].notified[key].indexOf(user['display-name'].toLowerCase());
                     channelList[streamer].notified[key].splice(index,1);
                     client.say(channel, `Successfully removed ${user['display-name'] } from ${streamer} on the ${key}change event FeelsOkayMan`);
                 }
